@@ -36,24 +36,41 @@ def preprocess_text(text):
 
 def extract_features(data):
     # Extract features from chief complaint
-    doc = nlp(data['chiefcomplaint'])
-    symptoms = [ent.text for ent in doc.ents if ent.label_ == 'SYMPTOM']
-    body_parts = [ent.text for ent in doc.ents if ent.label_ == 'BODY_PART']
+    data['chiefcomplaint'] = data['chiefcomplaint'].apply(nlp)
+
+    # Initialize lists to store symptoms and body parts
+    symptoms = []
+    body_parts = []
+
+    # Iterate over each row in the 'chiefcomplaint' column
+    for doc in data['chiefcomplaint']:
+        # Extract symptoms and body parts from the entities in the doc
+        symptoms.append([ent.text for ent in doc.ents if ent.label_ == 'SYMPTOM'])
+        body_parts.append([ent.text for ent in doc.ents if ent.label_ == 'BODY_PART'])
     
     # Add extracted features to the data
-    data['symptoms'] = [', '.join(symptoms)] * len(data)
-    data['body_parts'] = [', '.join(body_parts)] * len(data)
+    data['symptoms'] = [', '.join(symptom) for symptom in symptoms]
+    data['body_parts'] = [', '.join(symptom) for symptom in body_parts]
     
     return data
 
 def preprocess_data(data_path):
     # Load the MIMIC-IV-ED dataset
-    data_path = './raw_data'
-    edstays = pd.read_csv(f'{data_path}/edstays.csv')
-    diagnosis = pd.read_csv(f'{data_path}/diagnosis.csv')
-    medrecon = pd.read_csv(f'{data_path}/medrecon.csv')
-    triage = pd.read_csv(f'{data_path}/triage.csv')
-    vitalsign = pd.read_csv(f'{data_path}/vitalsign.csv')
+    data_path = 'raw_data'
+    
+    # Get the current working directory (should be the notebook folder)
+    current_dir = os.getcwd()
+
+    # Construct the path to the raw_data folder
+    project_dir = os.path.dirname(current_dir)  # Move up one level to the project directory
+    raw_data_dir = os.path.join(project_dir, 'raw_data')
+
+    # Load the MIMIC-IV-ED dataset
+    edstays = pd.read_csv(os.path.join(raw_data_dir, 'edstays.csv'))
+    diagnosis = pd.read_csv(os.path.join(raw_data_dir, 'diagnosis.csv'))
+    medrecon = pd.read_csv(os.path.join(raw_data_dir, 'medrecon.csv'))
+    triage = pd.read_csv(os.path.join(raw_data_dir, 'triage.csv'))
+    vitalsign = pd.read_csv(os.path.join(raw_data_dir, 'vitalsign.csv'))
 
     # Merge relevant tables
     data = pd.merge(edstays, triage, on=['subject_id', 'stay_id'], how='left')
@@ -72,37 +89,71 @@ def preprocess_data(data_path):
     data['chief_complaint_len'] = data['chiefcomplaint'].str.len()
     data = pd.get_dummies(data, columns=['race', 'arrival_transport', 'disposition'])
 
-    # Check for missing values
-    print("Missing values count:")
-    print(data.isnull().sum())
-    print("\nPercentage of missing values:")
-    print(data.isnull().mean() * 100)
+    # # Check for missing values
+    # print("Missing values count:")
+    # print(data.isnull().sum())
+    # print("\nPercentage of missing values:")
+    # print(data.isnull().mean() * 100)
 
     # Handle missing values
-    data = data.dropna()  # Replace this with appropriate imputation or dropping strategy
+    # Drop missing values
+    data = data.dropna(subset=['pain_x', 'pain_y'])
+    data = data.dropna(subset=['acuity'])
+    
+    cols = ['temperature_x', 'heartrate_x', 'resprate_x', 'o2sat_x', 'sbp_x', 'dbp_x', 'temperature_y', 'heartrate_y', 'resprate_y', 'o2sat_y', 'sbp_y', 'dbp_y']
 
+    for col in cols:
+        data[col] = data[col].fillna(data[col].median())
+        
+    # Define values to drop
+    drop_values = ['UA', 'Critical', 'does not scale', 'denies', 'uncooperative']
+
+    # Create mask for 'pain_x' and 'pain_y'
+    mask = ~data['pain_x'].isin(drop_values) & ~data['pain_y'].isin(drop_values)
+
+    # Apply mask to data
+    data = data[mask]
+
+    # Drop missing values
+    data = data.dropna(subset=['pain_x', 'pain_y'])
+    
     # Split data into features and target
-    X = data[['gender', 'chief_complaint_len', 'temperature', 'heartrate', 'resprate', 'o2sat', 'sbp', 'dbp', 'symptoms', 'body_parts']]
+    X = data[['gender', 'chief_complaint_len', 'temperature_x', 'heartrate_x', 'resprate_x', 'o2sat_x', 'sbp_x', 'dbp_x', 'pain_x', 'temperature_y', 'heartrate_y', 'resprate_y', 'o2sat_y', 'sbp_y', 'dbp_y', 'pain_y','symptoms', 'body_parts']]
     y = data['acuity']
 
-    # Detect and remove outliers
-    Q1 = X.quantile(0.25)
-    Q3 = X.quantile(0.75)
-    IQR = Q3 - Q1
-    outlier_mask = ~((X < (Q1 - 1.5 * IQR)) | (X > (Q3 + 1.5 * IQR))).all(axis=1)
-    X = X[outlier_mask]
-    y = y[outlier_mask]
+#     # Define numerical columns
+#     num_cols = ['chief_complaint_len', 'temperature_x', 'heartrate_x', 'resprate_x', 'o2sat_x', 'sbp_x', 'dbp_x', 
+#                 'temperature_y', 'heartrate_y', 'resprate_y', 'o2sat_y', 'sbp_y', 'dbp_y']
 
-    print(f"\nNumber of outliers removed: {sum(~outlier_mask)}")
-    print(f"Percentage of outliers removed: {sum(~outlier_mask) / len(X) * 100:.2f}%")
+#     # Detect and remove outliers in numerical columns
+#     Q1 = X[num_cols].quantile(0.25)
+#     Q3 = X[num_cols].quantile(0.75)
+#     IQR = Q3 - Q1
+#     outlier_mask = ~((X[num_cols] < (Q1 - 1.5 * IQR)) | (X[num_cols] > (Q3 + 1.5 * IQR))).all(axis=1)
+
+#     # Apply the mask to the entire DataFrame
+#     X = X[outlier_mask]
+#     y = y[outlier_mask]
+
+#     print(f"\nNumber of outliers removed: {sum(~outlier_mask)}")
+#     print(f"Percentage of outliers removed: {sum(~outlier_mask) / len(X) * 100:.2f}%")
+    
 
     # Split data into train and test sets
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    
+#     print("y_train:")
+#     print(y_train)
+
+#     print("\ny_test:")
+#     print(y_test)
+    
+#     print("changed")
 
     # Scale numerical features
     scaler = StandardScaler()
-    X_train_num = scaler.fit_transform(X_train[['temperature', 'heartrate', 'resprate', 'o2sat', 'sbp', 'dbp']])
-    X_test_num = scaler.transform(X_test[['temperature', 'heartrate', 'resprate', 'o2sat', 'sbp', 'dbp']])
+    X_train_num = scaler.fit_transform(X_train[['chief_complaint_len', 'temperature_x', 'heartrate_x', 'resprate_x', 'o2sat_x', 'sbp_x', 'dbp_x', 'pain_x', 'temperature_y', 'heartrate_y', 'resprate_y', 'o2sat_y', 'sbp_y', 'dbp_y', 'pain_y']])
+    X_test_num = scaler.transform(X_test[['chief_complaint_len', 'temperature_x', 'heartrate_x', 'resprate_x', 'o2sat_x', 'sbp_x', 'dbp_x', 'pain_x', 'temperature_y', 'heartrate_y', 'resprate_y', 'o2sat_y', 'sbp_y', 'dbp_y', 'pain_y']])
 
     # One-hot encode categorical features
     encoder = OneHotEncoder()
@@ -112,21 +163,24 @@ def preprocess_data(data_path):
     # Combine numerical and categorical features
     X_train = np.concatenate((X_train_num, X_train_cat.toarray()), axis=1)
     X_test = np.concatenate((X_test_num, X_test_cat.toarray()), axis=1)
+    
+    # Reset the indices of y_train and y_test
+    y_train = y_train.reset_index(drop=True)
+    y_test = y_test.reset_index(drop=True)
 
     # Create a single train.csv and test.csv file
-    train_data = pd.concat([pd.DataFrame(X_train), pd.DataFrame(y_train, columns=['target'])], axis=1)
-    test_data = pd.concat([pd.DataFrame(X_test), pd.DataFrame(y_test, columns=['target'])], axis=1)
-
+    train_data = pd.concat([pd.DataFrame(X_train), pd.DataFrame(y_train, columns=['acuity'])], axis=1)
+    test_data = pd.concat([pd.DataFrame(X_test), pd.DataFrame(y_test, columns=['acuity'])], axis=1)
+    
+    print("data preprocessing complete!")
+    
     return train_data, test_data
 
+    
 
 
-# Preprocess the data
-train_data, test_data = preprocess_data('data')
+    
 
-# Create the data directory if it doesn't exist
-os.makedirs('data', exist_ok=True)
 
-# Save the train and test data as CSV files
-train_data.to_csv('data/train.csv', index=False)
-test_data.to_csv('data/test.csv', index=False)
+
+    
