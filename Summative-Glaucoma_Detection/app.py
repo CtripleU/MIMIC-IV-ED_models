@@ -18,12 +18,12 @@ app = Flask(__name__)
 
 
 # Get the project root directory
-ROOT_DIR = os.path.abspath(os.path.join(os.getcwd()))
+ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
 # Load the trained model
 # model_path = './models/'
-model_file = os.path.join(ROOT_DIR, 'models/model.h5')  
+model_file = os.path.join(ROOT_DIR, 'models/model.h5') 
 model = load_model(model_file)
 
 # Image preprocessing function
