@@ -6,6 +6,8 @@ from PIL import Image
 import numpy as np
 import threading
 
+import os
+
 app = Flask(__name__)
 app.use_reloader = False  # Disable the reloader mechanism
 
