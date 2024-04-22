@@ -53,11 +53,43 @@ The main steps involved in the project are:
 ## Getting Started
 
 1. Clone the repository:
-
 ```bash
-git clone https://github.com/your-username/glaucoma-detection.git
+git clone https://github.com/CtripleU/MIMIC-IV-ED_MODELS.git
 ```
 
-2. Install the required packages:
-```pip install -r requirements.txt```
+2. Navigate to the project directory:
+```bash
+cd Summative-Glaucoma_Detection
+```
 
+3. Create and activate a virtual environment.
+
+4. Install the required packages:
+```bash
+pip install -r requirements.txt
+```
+
+5. Set the FLASK_APP environment variable:
+(On Unix) 
+```bash
+./setenv.sh
+```
+
+6. Run the application:
+```bash
+flask run
+```
+
+## Docker Setup
+
+You can also run this project as a Docker container:
+
+1. Pull the Docker image from the repository:
+```bash 
+docker pull cumioyemike/glaucoma_detection
+```
+
+2. Run the Docker image:
+```bash
+docker run -p 5000:5000 cumioyemike/glaucoma_detection
+```
