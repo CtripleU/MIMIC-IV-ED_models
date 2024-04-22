@@ -9,14 +9,9 @@ This project aims to build an automated system for detecting Glaucoma, an eye co
 - [Approach](#approach)
 - [Requirements](#requirements)
 - [Installation](#installation)
-- [Usage](#usage)
-  - [Data Preparation](#data-preparation)
-  - [Model Training](#model-training)
-  - [Model Evaluation](#model-evaluation)
-  - [Model Deployment](#model-deployment)
-- [Contributing](#contributing)
-- [License](#license)
-- [Acknowledgments](#acknowledgments)
+- [Getting Started](#Getting-Started)
+- [Docker Setup](#Docker-Setup)
+
 
 ## Problem Statement
 
