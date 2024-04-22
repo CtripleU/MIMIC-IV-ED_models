@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Prediction Result</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f2f2f2;
+            text-align: center;
+            padding: 50px;
+        }
+
+        h1 {
+            color: #333333;
+        }
+
+        .result {
+            margin-top: 30px;
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .result.glaucoma {
+            color: #ff6666;
+        }
+
+        .result.normal {
+            color: #66cc66;
+        }
+
+        img {
+            max-width: 400px;
+            margin-top: 30px;
+            border: 5px solid #cccccc;
+        }
+    </style>
+</head>
+<body>
+    <h1>Prediction Result</h1>
+    <div class="result {{ 'glaucoma' if prediction == 'Glaucoma' else 'normal' }}">
+        Prediction: {{ prediction }}
+    </div>
+    <img src="{{ image_path }}" alt="Uploaded Image">
+</body>
+</html>

@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Window</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f2f2f2;
+            text-align: center;
+            padding: 50px;
+        }
+
+        h1 {
+            color: #333333;
+        }
+
+        .upload-container {
+            margin-top: 30px;
+            border: 2px dashed #ccc;
+            padding: 20px;
+            background-color: #fff;
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .upload-container.dragover {
+            border-color: #4CAF50;
+        }
+
+        .upload-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 200px;
+            cursor: pointer;
+        }
+
+        .upload-area input[type="file"] {
+            display: none;
+        }
+
+        .upload-area span {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .upload-area i {
+            font-size: 40px;
+            color: #ccc;
+        }
+
+        input[type="submit"] {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+
+        form {
+            margin-top: 30px;
+        }
+
+        input[type="file"] {
+            padding: 10px;
+            font-size: 16px;
+        }
+
+        /* input[type="submit"] {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        } */
+    </style>
+    <script>
+        function dragOverHandler(event) {
+            event.preventDefault();
+            event.dataTransfer.dropEffect = "copy";
+            document.querySelector(".upload-container").classList.add("dragover");
+        }
+
+        function dragLeaveHandler(event) {
+            event.preventDefault();
+            document.querySelector(".upload-container").classList.remove("dragover");
+        }
+
+        function dropHandler(event) {
+            event.preventDefault();
+            document.querySelector(".upload-container").classList.remove("dragover");
+            const fileInput = document.querySelector("#fileInput");
+            fileInput.files = event.dataTransfer.files;
+        }
+    </script>
+</head>
+<body>
+    <h1>Hello! Welcome to Window</h1>
+    <h5>Want to know if a patient has Glaucoma or not? <br> upload an image of the retinal scan and leave the rest to us.</h5>
+    <div class="upload-container" ondragover="dragOverHandler(event)" ondragleave="dragLeaveHandler(event)" ondrop="dropHandler(event)">
+        <div class="upload-area">
+            <span>Drag and drop your image here or</span>
+            <label for="fileInput">
+                <i class="fas fa-cloud-upload-alt"></i>
+                <input id="fileInput" type="file" name="image" accept="image/*" required>
+            </label>
+        </div>
+    </div>
+    <br><br>
+    <div>
+    <form action="/predict" method="post" enctype="multipart/form-data">
+        <input type="file" name="image" required>
+        <br><br>
+        <input type="submit" value="Predict">
+    </form>
+    </div>
+</body>
+</html>
