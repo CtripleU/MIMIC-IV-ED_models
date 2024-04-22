@@ -1,20 +1,24 @@
+from tensorflow.keras.models import load_model
+
+import os
 from flask import Flask, render_template, request
 import pickle
 import tensorflow as tf
 from tensorflow import keras
-from tensorflow.keras.models import load_model
 from PIL import Image
 import numpy as np
-import threading
-
-import os
 
 app = Flask(__name__)
-app.use_reloader = False  # Disable the reloader mechanism
+
+# # Load the trained model
+# model_path = './models/'
+# model_file = os.path.join(model_path, 'model.pkl')
+# with open(model_file, 'rb') as f:
+#     model = pickle.load(f)
 
 # Load the trained model
-ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
-model_file = os.path.join(ROOT_DIR, 'models/model.h5')
+model_path = './models/'
+model_file = os.path.join(model_path, 'model.h5')  
 model = load_model(model_file)
 
 # Image preprocessing function
@@ -33,17 +37,16 @@ def index():
 def predict():
     if 'image' not in request.files:
         return 'No image uploaded'
+
     image_file = request.files['image']
     image_path = f'static/uploads/{image_file.filename}'
     image_file.save(image_path)
+
     preprocessed_image = preprocess_image(image_path)
     prediction = model.predict(preprocessed_image)
     prediction_label = 'Glaucoma' if prediction[0][0] > 0.5 else 'Normal'
+
     return render_template('result.html', prediction=prediction_label, image_path=image_path)
 
-def run_flask_app():
-    app.run(debug=True, use_reloader=False)  # Disable the reloader mechanism
-
 if __name__ == '__main__':
-    flask_thread = threading.Thread(target=run_flask_app)
-    flask_thread.start()
+    app.run(debug=True)
