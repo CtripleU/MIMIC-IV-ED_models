@@ -7,6 +7,7 @@ import tensorflow as tf
 from tensorflow import keras
 from PIL import Image
 import numpy as np
+import threading
 
 app = Flask(__name__)
 
@@ -53,5 +54,9 @@ def predict():
 
     return render_template('result.html', prediction=prediction_label, image_path=image_path)
 
-if __name__ == '__main__':
+def run_flask_app():
     app.run(debug=True)
+
+if __name__ == '__main__':
+    flask_thread = threading.Thread(target=run_flask_app)
+    flask_thread.start()
