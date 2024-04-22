@@ -2,6 +2,7 @@ from flask import Flask, render_template, request
 import pickle
 import tensorflow as tf
 from tensorflow import keras
+from tensorflow.keras.models import load_model
 from PIL import Image
 import numpy as np
 import threading
