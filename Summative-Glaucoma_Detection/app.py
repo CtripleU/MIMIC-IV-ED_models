@@ -16,9 +16,14 @@ app = Flask(__name__)
 # with open(model_file, 'rb') as f:
 #     model = pickle.load(f)
 
+
+# Get the project root directory
+ROOT_DIR = os.path.abspath(os.path.join(os.getcwd()))
+
+
 # Load the trained model
-model_path = './models/'
-model_file = os.path.join(model_path, 'model.h5')  
+# model_path = './models/'
+model_file = os.path.join(ROOT_DIR, 'models/model.h5')  
 model = load_model(model_file)
 
 # Image preprocessing function
